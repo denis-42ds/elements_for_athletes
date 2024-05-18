@@ -1,4 +1,4 @@
-# # импорт модулей
+# импорт модулей
 import os
 import re
 # import shap
@@ -18,76 +18,90 @@ import matplotlib.pyplot as plt
 # from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score, mean_absolute_percentage_error
 
 # # установка констант
-# RANDOM_STATE = 42
-# random.seed(RANDOM_STATE)
-# np.random.seed(RANDOM_STATE)
+RANDOM_STATE = 42
+random.seed(RANDOM_STATE)
+np.random.seed(RANDOM_STATE)
 
 class DatasetExplorer:
-    pass
-#     def __init__(self, DATA_PATH=None):
-#         self.DATA_PATH = DATA_PATH
+    def __init__(self, data_path: str = None, data: pd.DataFrame = None):
+        """
+        Initialize the class with the path to the data or a DataFrame.
+
+        Parameters:
+        data_path (str): Path to the data in CSV format.
+        data (pd.DataFrame): DataFrame containing the data.
+        """
+        try:
+            # Load data from the specified path if provided
+            self.data = pd.read_csv(data_path)
+        except:
+            # If loading data from path fails, use the provided DataFrame
+            self.data = data
+
+        # Initialize attributes for data processing
+        self.X = None
+        self.y = None
+        self.X_train = None
+        self.X_test = None
+        self.y_train = None
+        self.y_test = None
+
         
-#     def explore_dataset(self, assets_dir=None):
-#         with open (self.DATA_PATH, 'r') as f:
-#             data = f.read()
+    def explore_dataset(self, target: str = None, assets_dir: str = None):
 
-#         wmi_pattern = r'(?P<wmi>[ABCDEFGHJKLMNPRSTUVWXYZ1234567890]{3})'  # pos. 1-3
-#         brake_pattern = r'(?P<brake>[ABCDEFGHJKLMNPRSTUVWXYZ1234567890])' # pos. 4
-#         body_pattern = r'(?P<body>[ABCDEFGHJKLMNPRSTUVWXYZ1234567890]{3})'  # pos. 5-7
-#         engine_pattern = r'(?P<engine>[ABCDEFGHJKLMNPRSTUVWXYZ1234567890])'  # pos. 8
-#         check_digit_pattern = r'(?P<check_digit>[ABCDEFGHJKLMNPRSTUVWXYZ1234567890])'  # pos. 9
-#         year_pattern = r'(?P<year>[ABCDEFGHJKLMNPRSTUVWXYZ1234567890])'.replace('U', '').replace('Z', '').replace('0', '')  # pos. 10
-#         plant_pattern = r'(?P<plant>[ABCDEFGHJKLMNPRSTUVWXYZ1234567890])'  # pos. 11
-#         snum_pattern = r'(?P<snum>[ABCDEFGHJKLMNPRSTUVWXYZ1234567890]\d{5})'  # pos. 12-17
-#         price_pattern = r'\:(?P<price>\d+)'
-#         pattern = f'{wmi_pattern}{brake_pattern}{body_pattern}{engine_pattern}{check_digit_pattern}{year_pattern}{plant_pattern}{snum_pattern}{price_pattern}'
-#         dataset = pd.DataFrame([x.groupdict() for x in re.compile(pattern).finditer(data)])		
+        print('Общая информация по набору данных:')
+        self.data.info()
+        print('\nПервые пять строк набора данных:')
+        display(self.data.head(5))
+        print('\nКоличество полных дубликатов строк:')
+        display(self.data.duplicated().sum())
+        if self.data.duplicated().sum() > 0:
+            sizes = [self.data.duplicated().sum(), self.data.shape[0]]
+            fig1, ax1 = plt.subplots()
+            ax1.pie(sizes, labels=['duplicate', 'not a duplicate'], autopct='%1.0f%%')
+            plt.title('Number of complete duplicates in the total number of rows', size=12)
+            if assets_dir is not None:
+                plt.savefig(os.path.join(assets_dir, 'Number of complete duplicates in\nthe total number of rows.png'))
+            plt.show()
 
-#         # Преобразование типа данных целевой переменной
-#         dataset['price'] = dataset['price'].astype(int)
-#         print("Верхние пять строк датафрейма:\n")
-#         display(dataset.head())
-#         print("\nОбщая информация по датафрейму:\n")
-#         dataset.info()
-#         print(f"\nКоличество дубликатов: {dataset.duplicated().sum()}")
-#         print("\nКоличество уникальных значений в каждом признаке:\n")
-#         display(dataset.nunique())
-#         print("\nАнализ целевой переменной:\n")
-#         display(dataset['price'].describe())
-#         plt.figure(figsize=(14, 6))
-#         sns.set_palette("husl")
-#         sns.histplot(data=dataset, x='price', bins=100)
-#         plt.xlabel('Price of auto')
-#         plt.ylabel('Number of cars')
-#         plt.title('Car price distribution')
-#         if assets_dir:
-#             plt.savefig(os.path.join(assets_dir, 'Car price distribution.png'))
-#         plt.show()
-        
-#         plt.figure(figsize=(14, 6))
-#         sns.boxplot(data=dataset['price'], orient='h')
-#         plt.xlim(0, 40000)
-#         plt.title('Target boxplot', size=12)
-#         plt.xlabel('Price')
-#         if assets_dir:
-#             plt.savefig(os.path.join(assets_dir, 'Target boxplot.png'))
-#         plt.show()
+        print('\nКоличество пропущенных значений:')
+        display(self.data.isnull().sum())
+        if self.data.isnull().values.any():
+            if self.data.shape[1] <= 20 or self.data.shape[0] < 1000000:
+                sns.heatmap(self.data.isnull(), cmap=sns.color_palette(['#000099', '#ffff00']))
+                plt.xticks(rotation=90)
+                plt.title('Visualization of the number of missing values', size=12, y=1.02)
+                if assets_dir is not None:
+                    plt.savefig(os.path.join(assets_dir, 'Visualization of the number of missing values.png'))
+                plt.show()
 
-#         phik_overview = dataset.drop('snum', axis=1).phik_matrix(interval_cols=['price'])
-#         sns.set()
-#         plot_correlation_matrix(phik_overview.values,
-# 		                        x_labels=phik_overview.columns,
-# 								y_labels=phik_overview.index,
-# 								fontsize_factor=1.0,
-# 								figsize=(10, 10))
-#         plt.xticks(rotation=0)
-#         plt.title(f'Correlations between features', fontsize=12, y=1.02)
-#         if assets_dir:
-#             plt.savefig(os.path.join(assets_dir, 'Features correlations.png'))
-#         plt.tight_layout()
+        print('\nПроцент пропущенных значений в признаках:')
+        missing_values_ratios = {}
+        for column in self.data.columns[self.data.isna().any()].tolist():
+            missing_values_ratio = self.data[column].isna().sum() / self.data.shape[0]
+            missing_values_ratios[column] = missing_values_ratio
+        for column, ratio in missing_values_ratios.items():
+            print(f"{column}: {ratio*100:.2f}%")
 
-#         return dataset
+        # Исследование признаков, у которых в названии есть 'id'
+        id_columns = [col for col in self.data.columns if 'id' in col]
+        for col in id_columns:
+            print(f"Количество уникальных значений в столбце '{col}': {self.data[col].nunique()}")
+            print(f"Соотношение уникальных значений и общего количества записей в столбце '{col}': {self.data[col].nunique() / self.data.shape[0]:.4f}")
 
+        if target is not None:
+            self.y = self.data[target]
+            print('\nОписательные статистики целевой переменной:')
+            display(self.data[target].describe())
+            print()
+            sns.set_palette("husl")
+            sns.histplot(data=self.data, x=target, bins=10, log_scale=(True, False))
+            plt.xlabel('Sales in units')
+            plt.ylabel('Sales count')
+            plt.title('Target total distribution')
+            if assets_dir is not None:
+                plt.savefig(os.path.join(assets_dir, 'Target total distribution.png'))
+            plt.show()
 
 #     def data_preparing(self, dataset=None, target=None, test_size=None):
 #         X_train, X_test, y_train, y_test = train_test_split(dataset.drop(target, axis=1),

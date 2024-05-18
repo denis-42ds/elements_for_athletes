@@ -6,9 +6,9 @@
 
 ## Описание рабочих файлов и директорий:
 
-- [elements_searching.ipynb]() - рабочая тетрадь с исследованиями, визуализациями и текстовыми описаниями
-- [requirements.txt]() - список зависимостей, необходимых для работы проекта, а также их версии
-- [research_class.py]() - файл, содержащий класс для проведения исследования
+- [elements_searching.ipynb](https://github.com/denis-42ds/elements_for_athletes/blob/development/elements_searching.ipynb) - рабочая тетрадь с исследованиями, визуализациями и текстовыми описаниями
+- [requirements.txt](https://github.com/denis-42ds/elements_for_athletes/blob/development/requirements.txt) - список зависимостей, необходимых для работы проекта, а также их версии
+- [research_class.py](https://github.com/denis-42ds/elements_for_athletes/blob/development/research_class.py) - файл, содержащий класс для проведения исследования
 - [assets]() - директория с сохранёнными артефактами
 - [app]() - директория с приложением
 
