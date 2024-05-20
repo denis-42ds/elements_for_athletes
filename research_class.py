@@ -103,6 +103,8 @@ class DatasetExplorer:
                 plt.savefig(os.path.join(assets_dir, 'Target total distribution.png'))
             plt.show()
 
+        return self.data
+
 #     def data_preparing(self, dataset=None, target=None, test_size=None):
 #         X_train, X_test, y_train, y_test = train_test_split(dataset.drop(target, axis=1),
 # 															dataset[target],
