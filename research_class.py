@@ -7,8 +7,10 @@ import random
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import psycopg2 as psycopg
 import matplotlib.pyplot as plt
 
+from typing import Dict, List
 # from catboost import Pool, CatBoostRegressor
 # from phik.report import plot_correlation_matrix
 # from sklearn.linear_model import LinearRegression
@@ -21,9 +23,13 @@ import matplotlib.pyplot as plt
 RANDOM_STATE = 42
 random.seed(RANDOM_STATE)
 np.random.seed(RANDOM_STATE)
+sns.set_style('white')
+sns.set_theme(style='whitegrid')
+pd.options.display.max_rows = 20
+pd.options.display.max_columns = 30
 
 class DatasetExplorer:
-    def __init__(self, data_path: str = None, data: pd.DataFrame = None):
+    def __init__(self, data_path: str = None, connection: Dict = None, table_name: str = None):
         """
         Initialize the class with the path to the data or a DataFrame.
 
@@ -35,8 +41,16 @@ class DatasetExplorer:
             # Load data from the specified path if provided
             self.data = pd.read_csv(data_path)
         except:
-            # If loading data from path fails, use the provided DataFrame
-            self.data = data
+            # If loading data from path fails, use the table from DB
+            assert all([var_value != "" for var_value in list(connection.values())])
+
+            with psycopg.connect(**connection) as conn:
+                with conn.cursor() as cur:
+                    cur.execute(f"SELECT * FROM {table_name}")
+                    data = cur.fetchall()
+                    columns = [col[0] for col in cur.description]
+
+            self.data = pd.DataFrame(data, columns=columns)
 
         # Initialize attributes for data processing
         self.X = None
@@ -45,7 +59,7 @@ class DatasetExplorer:
         self.X_test = None
         self.y_train = None
         self.y_test = None
-
+        self.table_name = table_name
         
     def explore_dataset(self, target: str = None, assets_dir: str = None):
 
@@ -72,7 +86,7 @@ class DatasetExplorer:
                 plt.xticks(rotation=90)
                 plt.title('Visualization of the number of missing values', size=12, y=1.02)
                 if assets_dir is not None:
-                    plt.savefig(os.path.join(assets_dir, 'Visualization of the number of missing values.png'))
+                    plt.savefig(os.path.join(assets_dir, f'Visualization of the number of missing values in {self.table_name}.png'))
                 plt.show()
 
         print('\nПроцент пропущенных значений в признаках:')
